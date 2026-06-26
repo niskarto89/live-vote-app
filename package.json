@@ -1,0 +1,8 @@
+{
+  "name": "live-vote-app",
+  "version": "1.0.0",
+  "description": "Live voting app compatible with Vercel Serverless Functions",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.3"
+  }
+}
