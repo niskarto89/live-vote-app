@@ -6,11 +6,15 @@ module.exports = async function handler(request, response) {
   }
   
   try {
-    const { candidate_id, pin } = request.body;
+    const { pin, candidate_id, new_name, photo_url } = request.body;
     const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
     
     if (pin !== ADMIN_PIN) {
-        return response.status(403).json({ error: 'PIN salah! Anda tidak memiliki akses.' });
+      return response.status(403).json({ error: 'PIN salah!' });
+    }
+    
+    if (!candidate_id || !new_name || new_name.trim() === '') {
+      return response.status(400).json({ error: 'ID Kandidat dan Nama Baru harus diisi!' });
     }
     
     if (!process.env.DATABASE_URL) {
@@ -18,15 +22,12 @@ module.exports = async function handler(request, response) {
     }
 
     const sql = neon(process.env.DATABASE_URL);
+    const photo = photo_url || '';
     
-    if (!candidate_id) {
-      return response.status(400).json({ error: 'candidate_id is required' });
-    }
+    // Update candidate name and photo
+    await sql`UPDATE candidates SET name = ${new_name.trim()}, photo_url = ${photo} WHERE id = ${candidate_id};`;
     
-    // Increment vote count
-    await sql`UPDATE candidates SET vote_count = vote_count + 1 WHERE id = ${candidate_id};`;
-    
-    return response.status(200).json({ success: true });
+    return response.status(200).json({ success: true, message: 'Data kandidat berhasil diubah!' });
   } catch (error) {
     return response.status(500).json({ error: error.message });
   }

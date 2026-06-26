@@ -6,11 +6,11 @@ module.exports = async function handler(request, response) {
   }
   
   try {
-    const { candidate_id, pin } = request.body;
+    const { pin } = request.body;
     const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
     
     if (pin !== ADMIN_PIN) {
-        return response.status(403).json({ error: 'PIN salah! Anda tidak memiliki akses.' });
+      return response.status(403).json({ error: 'PIN salah!' });
     }
     
     if (!process.env.DATABASE_URL) {
@@ -19,14 +19,10 @@ module.exports = async function handler(request, response) {
 
     const sql = neon(process.env.DATABASE_URL);
     
-    if (!candidate_id) {
-      return response.status(400).json({ error: 'candidate_id is required' });
-    }
+    // Reset all votes to 0
+    await sql`UPDATE candidates SET vote_count = 0;`;
     
-    // Increment vote count
-    await sql`UPDATE candidates SET vote_count = vote_count + 1 WHERE id = ${candidate_id};`;
-    
-    return response.status(200).json({ success: true });
+    return response.status(200).json({ success: true, message: 'Suara berhasil di-reset!' });
   } catch (error) {
     return response.status(500).json({ error: error.message });
   }

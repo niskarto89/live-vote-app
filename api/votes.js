@@ -6,7 +6,6 @@ module.exports = async function handler(request, response) {
   }
 
   try {
-    // Make sure DATABASE_URL is set in Vercel environment variables
     if (!process.env.DATABASE_URL) {
       return response.status(500).json({ error: 'DATABASE_URL is not set' });
     }
@@ -22,14 +21,17 @@ module.exports = async function handler(request, response) {
       );
     `;
     
+    // Ensure photo_url column exists (Migration)
+    await sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';`;
+    
     // 2. Check if we have candidates, if not insert default 2 candidates
     const countRes = await sql`SELECT COUNT(*) as count FROM candidates;`;
     if (parseInt(countRes[0].count) === 0) {
-      await sql`INSERT INTO candidates (name, vote_count) VALUES ('Kandidat A', 0), ('Kandidat B', 0);`;
+      await sql`INSERT INTO candidates (name, vote_count, photo_url) VALUES ('Kandidat A', 0, ''), ('Kandidat B', 0, '');`;
     }
     
     // 3. Fetch candidates
-    const rows = await sql`SELECT id, name, vote_count FROM candidates ORDER BY id ASC;`;
+    const rows = await sql`SELECT id, name, vote_count, photo_url FROM candidates ORDER BY id ASC;`;
     
     return response.status(200).json({ candidates: rows });
   } catch (error) {
