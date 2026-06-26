@@ -6,7 +6,7 @@ module.exports = async function handler(request, response) {
   }
   
   try {
-    const { candidate_id, pin, action } = request.body; // action can be 'increment' or 'decrement'
+    const { pin, action } = request.body; // action can be 'increment' or 'decrement'
     const ADMIN_PIN = process.env.ADMIN_PIN || '123456';
     
     if (pin !== ADMIN_PIN) {
@@ -19,14 +19,10 @@ module.exports = async function handler(request, response) {
 
     const sql = neon(process.env.DATABASE_URL);
     
-    if (!candidate_id) {
-      return response.status(400).json({ error: 'candidate_id is required' });
-    }
-    
     if (action === 'decrement') {
-      await sql`UPDATE candidates SET vote_count = GREATEST(vote_count - 1, 0) WHERE id = ${candidate_id};`;
+      await sql`UPDATE global_stats SET invalid_votes = GREATEST(invalid_votes - 1, 0) WHERE id = 1;`;
     } else {
-      await sql`UPDATE candidates SET vote_count = vote_count + 1 WHERE id = ${candidate_id};`;
+      await sql`UPDATE global_stats SET invalid_votes = invalid_votes + 1 WHERE id = 1;`;
     }
     
     return response.status(200).json({ success: true });

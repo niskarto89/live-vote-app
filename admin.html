@@ -27,17 +27,48 @@
             <a href="/" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm font-semibold underline">Buka Layar Publik &nearr;</a>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12" id="admin-candidates-container">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8" id="admin-candidates-container">
             <div class="col-span-1 md:col-span-2 text-center text-gray-500 animate-pulse">Memuat data...</div>
+        </div>
+
+        <!-- Invalid Votes Section -->
+        <div class="bg-red-900/20 border border-red-500/30 p-6 rounded-2xl flex flex-col relative items-center justify-center mb-8">
+            <h2 class="text-2xl font-bold text-red-500 mb-1">SUARA TIDAK SAH</h2>
+            <div class="text-5xl font-black text-white mb-6" id="invalid-votes-admin">0</div>
+            
+            <div class="flex gap-4 w-full max-w-sm">
+                <button onclick="voteInvalid('decrement')" class="flex-1 bg-red-900/50 hover:bg-red-900 text-red-400 border border-red-500/50 font-bold py-3 rounded-xl transition-all active:scale-95 text-xl">
+                    -1
+                </button>
+                <button onclick="voteInvalid('increment')" class="flex-[3] bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all active:scale-95 text-xl">
+                    +1 SUARA
+                </button>
+            </div>
         </div>
 
         <hr class="border-gray-800 my-8">
 
-        <!-- Reset Section -->
-        <div class="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl text-center">
-            <h3 class="text-xl font-bold text-red-500 mb-2">ZONA BERBAHAYA</h3>
-            <p class="text-sm text-gray-400 mb-4">Mereset suara akan menghapus seluruh data yang sudah masuk ke angka 0.</p>
-            <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl transition-all active:scale-95 shadow-lg">RESET SELURUH SUARA KE 0</button>
+        <!-- Reset & Export Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Export Section -->
+            <div class="bg-green-900/10 border border-green-900/30 p-6 rounded-2xl text-center flex flex-col justify-center">
+                <h3 class="text-xl font-bold text-green-500 mb-2">LAPORAN HASIL</h3>
+                <p class="text-sm text-gray-400 mb-4">Unduh rekapitulasi perolehan suara dalam format Excel (CSV).</p>
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    UNDUH EXCEL (CSV)
+                </button>
+            </div>
+
+            <!-- Reset Section -->
+            <div class="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl text-center flex flex-col justify-center">
+                <h3 class="text-xl font-bold text-red-500 mb-2">ZONA BERBAHAYA</h3>
+                <p class="text-sm text-gray-400 mb-4">Mereset akan menghapus seluruh data suara (Sah & Tidak Sah) menjadi 0.</p>
+                <button id="reset-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    RESET SELURUH SUARA
+                </button>
+            </div>
         </div>
     </div>
 

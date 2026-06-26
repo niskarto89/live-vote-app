@@ -1,12 +1,11 @@
 let currentPin = '';
 let allCandidates = [];
+let invalidVotes = 0;
 
 document.getElementById('login-btn').addEventListener('click', () => {
     const pin = document.getElementById('pin-input').value;
     if (!pin) return alert('Masukkan PIN!');
     currentPin = pin;
-    
-    // Test fetch
     fetchVotes(true);
 });
 
@@ -19,6 +18,7 @@ async function fetchVotes(isLogin = false) {
             alert("Error dari server: " + data.error);
         } else {
             allCandidates = data.candidates;
+            invalidVotes = data.invalid_votes || 0;
             renderAdminPanel();
             if (isLogin) {
                 document.getElementById('auth-section').classList.add('hidden');
@@ -33,10 +33,14 @@ async function fetchVotes(isLogin = false) {
 function renderAdminPanel() {
     const container = document.getElementById('admin-candidates-container');
     container.innerHTML = '';
+    
+    // Update invalid votes number
+    const invalidEl = document.getElementById('invalid-votes-admin');
+    if (invalidEl) invalidEl.textContent = invalidVotes;
 
     allCandidates.forEach((c, idx) => {
         const colorClass = idx === 0 ? 'text-[#00F0FF] border-[#00F0FF]/30' : 'text-[#FFD700] border-[#FFD700]/30';
-        const btnClass = idx === 0 ? 'bg-[#00F0FF]/20 text-[#00F0FF] hover:bg-[#00F0FF]/30' : 'bg-[#FFD700]/20 text-[#FFD700] hover:bg-[#FFD700]/30';
+        const btnClass = idx === 0 ? 'bg-[#00F0FF] hover:bg-[#00F0FF]/80 text-black' : 'bg-[#FFD700] hover:bg-[#FFD700]/80 text-black';
         
         container.innerHTML += `
             <div class="bg-gray-900 border ${colorClass} p-6 rounded-2xl flex flex-col relative">
@@ -46,9 +50,14 @@ function renderAdminPanel() {
                     <div class="text-5xl font-black">${c.vote_count} <span class="text-lg text-gray-500 font-normal">Suara</span></div>
                 </div>
 
-                <button onclick="voteFor(${c.id})" class="w-full ${btnClass} font-bold py-4 rounded-xl text-xl mb-6 transition-all active:scale-95">
-                    +1 BERI SUARA
-                </button>
+                <div class="flex gap-4 mb-6">
+                    <button onclick="voteFor(${c.id}, 'decrement')" class="flex-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white font-bold py-4 rounded-xl text-xl transition-all active:scale-95">
+                        -1
+                    </button>
+                    <button onclick="voteFor(${c.id}, 'increment')" class="flex-[3] w-full ${btnClass} font-bold py-4 rounded-xl text-xl transition-all active:scale-95 shadow-lg">
+                        +1 BERI SUARA
+                    </button>
+                </div>
 
                 <hr class="border-gray-800 my-4">
                 
@@ -72,16 +81,29 @@ function renderAdminPanel() {
     });
 }
 
-async function voteFor(id) {
+async function voteFor(id, action) {
     try {
         const res = await fetch('/api/vote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin: currentPin, candidate_id: id })
+            body: JSON.stringify({ pin: currentPin, candidate_id: id, action: action })
         });
         const data = await res.json();
         if(!data.success) return alert(data.error);
-        fetchVotes(); // refresh
+        fetchVotes(); 
+    } catch(e) { alert(e.message); }
+}
+
+async function voteInvalid(action) {
+    try {
+        const res = await fetch('/api/vote_invalid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin: currentPin, action: action })
+        });
+        const data = await res.json();
+        if(!data.success) return alert(data.error);
+        fetchVotes(); 
     } catch(e) { alert(e.message); }
 }
 
@@ -98,7 +120,7 @@ async function updateCandidate(id) {
         const data = await res.json();
         if(!data.success) return alert(data.error);
         alert('Berhasil diperbarui!');
-        fetchVotes(); // refresh
+        fetchVotes(); 
     } catch(e) { alert(e.message); }
 }
 
@@ -117,3 +139,32 @@ document.getElementById('reset-btn').addEventListener('click', async () => {
         } catch(e) { alert(e.message); }
     }
 });
+
+function exportToExcel() {
+    if (allCandidates.length === 0) return alert("Belum ada data.");
+    
+    // Create CSV content
+    const BOM = "\uFEFF"; // To fix Excel UTF-8 display issues
+    let csv = BOM + "Laporan Hasil Perolehan Suara\n\n";
+    
+    let totalSah = 0;
+    csv += "Kandidat,Jumlah Suara\n";
+    allCandidates.forEach(c => {
+        csv += `"${c.name}",${c.vote_count}\n`;
+        totalSah += c.vote_count;
+    });
+    
+    csv += `\n"Total Suara Sah",${totalSah}\n`;
+    csv += `"Suara Tidak Sah",${invalidVotes}\n`;
+    csv += `"TOTAL SUARA KESELURUHAN",${totalSah + invalidVotes}\n`;
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Laporan_Suara_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

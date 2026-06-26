@@ -21,6 +21,7 @@ module.exports = async function handler(request, response) {
     
     // Reset all votes to 0
     await sql`UPDATE candidates SET vote_count = 0;`;
+    await sql`UPDATE global_stats SET invalid_votes = 0 WHERE id = 1;`;
     
     return response.status(200).json({ success: true, message: 'Suara berhasil di-reset!' });
   } catch (error) {

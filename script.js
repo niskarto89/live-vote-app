@@ -9,7 +9,7 @@ async function fetchVotes() {
             showError("Error dari server: " + data.error);
         } else {
             renderCandidates(data.candidates);
-            updateGlobalStats(data.candidates);
+            updateGlobalStats(data.candidates, data.invalid_votes);
         }
     } catch (error) {
         showError("Gagal terhubung ke API. " + error.message);
@@ -21,7 +21,7 @@ function showError(message) {
     container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-red-500 bg-red-900/20 p-4 rounded-xl border border-red-500/50 font-bold">${message}</div>`;
 }
 
-function updateGlobalStats(candidates) {
+function updateGlobalStats(candidates, invalidVotes) {
     if (candidates.length < 2) return;
     
     const v1 = candidates[0].vote_count;
@@ -30,6 +30,10 @@ function updateGlobalStats(candidates) {
     
     // Update Total Big Number
     document.getElementById('total-all-votes').textContent = total;
+    
+    // Update Invalid Votes Big Number
+    const invalidEl = document.getElementById('invalid-votes-count');
+    if (invalidEl) invalidEl.textContent = invalidVotes || 0;
     
     // Update Progress Bar
     const container = document.getElementById('progress-bar-container');

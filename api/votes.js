@@ -12,28 +12,44 @@ module.exports = async function handler(request, response) {
 
     const sql = neon(process.env.DATABASE_URL);
     
-    // 1. Ensure table exists
+    // Ensure candidates table exists
     await sql`
       CREATE TABLE IF NOT EXISTS candidates (
           id SERIAL PRIMARY KEY,
           name VARCHAR(255),
-          vote_count INTEGER DEFAULT 0
+          vote_count INTEGER DEFAULT 0,
+          photo_url TEXT DEFAULT ''
       );
     `;
     
-    // Ensure photo_url column exists (Migration)
-    await sql`ALTER TABLE candidates ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';`;
+    // Ensure global_stats table exists
+    await sql`
+      CREATE TABLE IF NOT EXISTS global_stats (
+          id INTEGER PRIMARY KEY,
+          invalid_votes INTEGER DEFAULT 0
+      );
+    `;
     
-    // 2. Check if we have candidates, if not insert default 2 candidates
+    // Check if we have candidates
     const countRes = await sql`SELECT COUNT(*) as count FROM candidates;`;
     if (parseInt(countRes[0].count) === 0) {
       await sql`INSERT INTO candidates (name, vote_count, photo_url) VALUES ('Kandidat A', 0, ''), ('Kandidat B', 0, '');`;
     }
     
-    // 3. Fetch candidates
-    const rows = await sql`SELECT id, name, vote_count, photo_url FROM candidates ORDER BY id ASC;`;
+    // Check if global_stats exists
+    const statsRes = await sql`SELECT COUNT(*) as count FROM global_stats;`;
+    if (parseInt(statsRes[0].count) === 0) {
+      await sql`INSERT INTO global_stats (id, invalid_votes) VALUES (1, 0);`;
+    }
     
-    return response.status(200).json({ candidates: rows });
+    // Fetch data
+    const candidates = await sql`SELECT id, name, vote_count, photo_url FROM candidates ORDER BY id ASC;`;
+    const stats = await sql`SELECT invalid_votes FROM global_stats WHERE id = 1;`;
+    
+    return response.status(200).json({ 
+        candidates: candidates,
+        invalid_votes: stats[0].invalid_votes
+    });
   } catch (error) {
     return response.status(500).json({ error: error.message });
   }
