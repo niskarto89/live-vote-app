@@ -5,13 +5,23 @@ async function fetchVotes() {
         const response = await fetch('/api/votes');
         const data = await response.json();
         
-        renderCandidates(data.candidates);
+        if (data.error) {
+            showError("Error dari server: " + data.error);
+        } else {
+            renderCandidates(data.candidates);
+        }
     } catch (error) {
-        console.error("Error fetching votes:", error);
+        showError("Gagal terhubung ke API. " + error.message);
     }
 }
 
+function showError(message) {
+    const container = document.getElementById('candidates-container');
+    container.innerHTML = `<div class="col-span-1 md:col-span-2 text-center text-red-500 bg-red-900/20 p-4 rounded-xl border border-red-500/50 font-bold">${message}<br><br><span class="text-sm text-gray-400 font-normal">Pastikan Anda sudah memasukkan DATABASE_URL di Environment Variables Vercel dan men-deploy ulang.</span></div>`;
+}
+
 function renderCandidates(candidates) {
+    if (!candidates) return;
     const container = document.getElementById('candidates-container');
     
     // First time render
