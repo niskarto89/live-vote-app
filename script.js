@@ -68,13 +68,41 @@ function renderCandidates(candidates) {
         container.innerHTML = '';
     }
 
-    candidates.forEach((candidate) => {
+    candidates.forEach((candidate, index) => {
         let card = document.getElementById(`candidate-${candidate.id}`);
         
         if (!card) {
             const template = document.getElementById('candidate-template');
             const clone = template.content.cloneNode(true);
             
+            // Dynamic styling based on candidate index (0 = Blue, 1 = Gold)
+            const isFirst = index === 0;
+            const textColor = isFirst ? 'text-[#00F0FF]' : 'text-[#FFD700]';
+            const borderColor = isFirst ? 'border-[#00F0FF]/60' : 'border-[#FFD700]/60';
+            const bgColor = isFirst ? 'bg-[#00F0FF]/20' : 'bg-[#FFD700]/20';
+            const shadowColor = isFirst ? 'shadow-[0_0_40px_rgba(0,240,255,0.4)]' : 'shadow-[0_0_40px_rgba(255,215,0,0.4)]';
+            const gradientFrom = isFirst ? 'from-[#00F0FF]' : 'from-[#FFD700]';
+            const textGradient = isFirst ? 'from-white to-[#00F0FF]/50' : 'from-white to-[#FFD700]/50';
+
+            // Top line
+            clone.querySelector('.candidate-top-line').className += ` bg-gradient-to-r ${gradientFrom} to-transparent`;
+            
+            // Photo container
+            const photoContainer = clone.querySelector('.candidate-photo-container');
+            photoContainer.className += ` ${borderColor} ${shadowColor}`;
+            
+            // Percentage badge
+            const pctBadge = clone.querySelector('.candidate-pct-badge');
+            pctBadge.className += ` ${bgColor} ${borderColor} ${textColor}`;
+            
+            // Vote count
+            const voteCount = clone.querySelector('.vote-count');
+            voteCount.className += ` ${textGradient}`;
+            
+            // Glow
+            const glow = clone.querySelector('.candidate-glow');
+            glow.className += ` ${bgColor}`;
+
             card = clone.querySelector('.candidate-card');
             card.id = `candidate-${candidate.id}`;
             container.appendChild(clone);
@@ -143,6 +171,51 @@ function updateTally(container, totalVotes) {
     }
 }
 
-// Initial fetch
+function updateDateTime() {
+    const now = new Date();
+    // Convert to GMT+7 (Asia/Jakarta)
+    const options = { 
+        timeZone: 'Asia/Jakarta', 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+    };
+    
+    try {
+        const formatter = new Intl.DateTimeFormat('id-ID', options);
+        const parts = formatter.formatToParts(now);
+        
+        const weekday = parts.find(p => p.type === 'weekday').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const year = parts.find(p => p.type === 'year').value;
+        let hour = parts.find(p => p.type === 'hour').value;
+        let minute = parts.find(p => p.type === 'minute').value;
+        let second = parts.find(p => p.type === 'second').value;
+        
+        // Ensure 2 digits
+        hour = hour.padStart(2, '0');
+        minute = minute.padStart(2, '0');
+        second = second.padStart(2, '0');
+        
+        const dateStr = `${weekday}, ${day} ${month} ${year} | ${hour}:${minute}:${second} WIB`;
+        const dtEl = document.getElementById('datetime-display');
+        if (dtEl) dtEl.textContent = dateStr;
+    } catch (e) {
+        // Fallback if Intl is not supported fully
+        const dtEl = document.getElementById('datetime-display');
+        if (dtEl) dtEl.textContent = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) + " WIB";
+    }
+}
+
+// Initial fetches and intervals
+updateDateTime();
+setInterval(updateDateTime, 1000);
+
 fetchVotes();
 setInterval(fetchVotes, 1000);
