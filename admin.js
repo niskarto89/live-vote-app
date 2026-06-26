@@ -125,12 +125,23 @@ async function updateCandidate(id) {
 }
 
 document.getElementById('reset-btn').addEventListener('click', async () => {
-    if(confirm("YAKIN INGIN MERESET SEMUA SUARA KE 0? TINDAKAN INI TIDAK BISA DIBATALKAN!")) {
+    if(confirm("YAKIN INGIN MERESET SEMUA SUARA KE 0? TINDAKAN INI SANGAT BERBAHAYA DAN TIDAK BISA DIBATALKAN!")) {
+        // Minta PIN lagi untuk konfirmasi
+        const pinConfirm = prompt("Masukkan kembali PIN Anda untuk mengonfirmasi penghapusan seluruh data:");
+        
+        if (pinConfirm === null) {
+            return; // Dibatalkan oleh user
+        }
+        
+        if (pinConfirm !== currentPin) {
+            return alert("PIN YANG ANDA MASUKKAN SALAH! Proses reset dibatalkan demi keamanan.");
+        }
+
         try {
             const res = await fetch('/api/reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pin: currentPin })
+                body: JSON.stringify({ pin: pinConfirm })
             });
             const data = await res.json();
             if(!data.success) return alert(data.error);
